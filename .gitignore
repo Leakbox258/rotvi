@@ -1,0 +1,9 @@
+.bash_history
+.bash_logout
+.bashrc
+.clang-format
+.clang-tidy
+.profile
+CMakeFiles/
+.vscode/
+build/
