@@ -1,4 +1,4 @@
-# rotvi editor ( or ！∧ editor )
+# rotvi editor ( or !^ editor )
 A vi like terminal-based text editor on Linux
 
 Make a quick start: 
