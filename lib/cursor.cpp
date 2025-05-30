@@ -1,5 +1,6 @@
 #include <cursor.hpp>
-///@todo 支持分屏
+
+timeExtern;
 
 // Terminal dimensions
 int term_rows, term_cols;
@@ -15,14 +16,14 @@ void cursor::fileWriteBack(const string &filename) {
     std::ofstream stream(filename);
 
     if (stream) {
-        for (const auto &line : this->_lines_buf_) {
-            stream << line << std::endl; // write back
+        for (const auto &line : _lines_buf_) {
+            stream << line << std::endl;
         }
         stream.close();
-        this->renewStatus("\"" + filename + "\" saved.");
-        this->renewFileName(filename);
+        renewStatus("\"" + filename + "\" saved.");
+        renewFileName(filename);
     } else {
-        this->renewStatus("Error: Could not open file for writing: " + filename);
+        renewStatus("Error: Could not open file for writing: " + filename);
     }
 }
 
@@ -33,14 +34,18 @@ void cursor::setToEOF() {
 
     _row_ = std::max(0, std::min(_row_, static_cast<int>(_lines_buf_.size()) - 1));
 
-    _col_ = std::max(0, std::min(_col_, static_cast<int>(_lines_buf_[_row_].length())));
+    auto &currentLint = lineCur();
 
-    if (mode() == Mode::NORMAL && !_lines_buf_[_row_].empty() &&
-        _col_ == static_cast<int>(_lines_buf_[_row_].length()) && _col_ > 0) {
-        --_col_; // fix
+    _col_ = std::max(0, std::min(_col_, static_cast<int>(currentLint.length())));
+
+    if (mode() == Mode::NORMAL && _col_ > 0 && !currentLint.empty() &&
+        _col_ == static_cast<int>(currentLint.length())) {
+        --_col_;
     }
 
-    mode() == Mode::NORMAL &&_lines_buf_[_row_].empty() ? void(_col_ = 0) : nop;
+    if (mode() == Mode::NORMAL && currentLint.empty()) {
+        _col_ = 0;
+    }
 
     _row_ < _win_top_row_ ? void(_win_top_row_ = _row_) : nop;
 
@@ -121,212 +126,5 @@ void cursor::redrawScreen() {
         api::Move(_row_ - _win_top_row_, _col_ - _win_left_col_);
     }
 
-    api::Refresh(); // Refresh the screen to show changes
-}
-
-void cursor::pressHandler(int ch) {
-
-    if (mode() == Mode::NORMAL) {
-        switch (ch) {
-        case api::Key_left:
-        case 'h':
-            mvLeft();
-            break;
-        case api::Key_right:
-        case 'l':
-            mvRight();
-            break;
-        case api::Key_up:
-        case 'k':
-            mvUp();
-            break;
-        case api::Key_down:
-        case 'j':
-            mvDown();
-            break;
-        case api::Key_home:
-        case '0':
-            mvHome();
-            break;
-        case api::Key_end:
-        case '$':
-            mvEnd();
-            break; // Go to end, normal mode style
-        case 'i':
-            chmode(Mode::INSERT);
-            break;
-        case 'a': {
-            if (!_lines_buf_[_row_].empty() || _col_ > 0) { // if not empty line, or not at col 0 of empty line
-                _col_ = std::min(static_cast<int>(_lines_buf_[_row_].length()), _col_ + 1);
-            }
-
-            chmode(Mode::INSERT);
-            break;
-        }
-        case 'o': // Open line below
-            _lines_buf_.insert(_lines_buf_.begin() + _row_ + 1, "");
-            ++_row_;
-            _col_ = 0;
-            chmode(Mode::INSERT);
-            break;
-        case 'O': // Open line above
-            _lines_buf_.insert(_lines_buf_.begin() + _row_, "");
-            // _cursor_row_ remains same, new line inserted at _row_
-            _col_ = 0;
-            chmode(Mode::INSERT);
-            break;
-        case 'x': // Delete character under cursor
-            if (!lineColNr(_row_) && _col_ < static_cast<int>(lineColNr(_row_))) {
-                _lines_buf_[_row_].erase(_col_, 1);
-            }
-            break;
-        case 'd':              // Potentially start 'dd'
-            ch = api::Getch(); // Wait for next char
-            if (ch == 'd') {   // 'dd' - delete line
-                if (!lineEmpty()) {
-                    _lines_buf_.erase(_lines_buf_.begin() + _row_);
-                    if (lineEmpty()) {
-                        lineAppend("");
-                        // Ensure buffer is not completely empty
-                        if (_row_ >= static_cast<int>(lineNr())) {
-                            // if deleted last line
-                            _row_ = static_cast<int>(lineNr()) - 1;
-                        }
-                    }
-                } else {
-                    // Unrecognized 'd' command, beep or ungetch(ch)
-                    api::Beep();
-                }
-                break;
-            case ':':
-                chmode(Mode::COMMAND_LINE);
-                _cmd_buf_.clear();
-                renewStatus(":");
-                break;
-                // Add G to go to last line, gg to go to first line
-            case 'G':
-                _row_ = static_cast<int>(lineNr()) - 1;
-                setToEOF(); // ensure col is valid
-                break;
-                // No 'gg' yet, can be added with timeout or sequence detection
-            }
-        }
-    } else if (mode() == Mode::INSERT) {
-        switch (ch) {
-        case api::Key_backspace: // Typically 127 or 263, or '\b'
-        case 127:                // ASCII DEL
-        case 8:                  // ASCII BS (often map to the same in raw mode by terminals)
-            if (_col_ > 0) {
-                _lines_buf_[_row_].erase(_col_ - 1, 1);
-                --_col_;
-            } else if (_row_ > 0) {
-                // Backspace at beginning of line
-                // Join with previous line
-                string &current_line_content = _lines_buf_[_row_];
-
-                _lines_buf_.erase(_lines_buf_.begin() + _row_);
-                --_row_;
-                _col_ = static_cast<int>(_lines_buf_[_row_].length());
-
-                _lines_buf_[_row_] += current_line_content;
-            }
-            break;
-        case 27: // Escape key
-            chmode(Mode::NORMAL);
-
-            // In vi, Esc in insert mode moves cursor one left if not at start of line
-            mvLeft();
-            break;
-        case api::Key_enter: // ncurses defined, or 10 (\n), 13 (\r)
-        case '\n':
-        case '\r': {
-            string current_line_suffix = _lines_buf_[_row_].substr(_col_);
-            _lines_buf_[_row_].erase(_col_); // Remove suffix from current line
-            _lines_buf_.insert(_lines_buf_.begin() + _row_ + 1,
-                               current_line_suffix); // Insert suffix as new line
-            _row_++;
-            _col_ = 0;
-        } break;
-        default:
-            // Insert normal characters
-            if (api::Isprint(ch) || ch == '\t') {
-                _lines_buf_[_row_].insert(_col_, 1, static_cast<char>(ch));
-                _col_++;
-            }
-            break;
-        }
-    } else if (mode() == Mode::COMMAND_LINE) {
-        switch (ch) {
-        case KEY_BACKSPACE:
-        case 127:
-        case 8:
-            if (!_cmd_buf_.empty()) {
-                _cmd_buf_.pop_back();
-            }
-            break;
-        case 27: // Escape key
-            chmode(Mode::COMMAND_LINE);
-            _cmd_buf_.clear();
-            break;
-        case KEY_ENTER:
-        case '\n':
-        case '\r':
-            processCmd();
-            chmode(Mode::NORMAL); // return to normal mode
-            break;
-        default:
-            if (api::Isprint(ch)) {
-                _cmd_buf_ += static_cast<char>(ch);
-            }
-            break;
-        }
-    }
-}
-
-void cursor::processCmd() {
-
-    if (_cmd_buf_.empty()) {
-        return;
-    }
-
-    if (_cmd_buf_ == "q") {
-        ///@todo Add check for unsaved changes
-
-        api::Endwin();
-        api::ForceQuit(0);
-    } else if (_cmd_buf_ == "q!") {
-        api::Endwin();
-        api::ForceQuit(0);
-    } else if (_cmd_buf_.rfind("w ", 0) == 0) {
-        string filename_to_save = _cmd_buf_.substr(2);
-
-        if (filename_to_save.empty()) {
-            filename_to_save = _file_name_;
-        }
-
-        if (filename_to_save == "untitled" || filename_to_save.empty()) {
-            _status_msg_ = "E32: No file name";
-        } else {
-            fileWriteBack(filename_to_save);
-        }
-    } else if (_cmd_buf_ == "wq") {
-        if (_file_name_ == "untitled" || _file_name_.empty()) {
-            _status_msg_ = "E32: No file name for :wq. Use :wq <filename>";
-        } else {
-            fileWriteBack(_file_name_);
-            api::Endwin();
-            api::ForceQuit(0);
-        }
-    } else if (_cmd_buf_.rfind("wq ", 0) == 0) {
-        string filename_to_save = _cmd_buf_.substr(3);
-        fileWriteBack(filename_to_save);
-        if (_status_msg_.find("Error") == string::npos) { // if no error during save
-            api::Endwin();
-            api::ForceQuit(0);
-        }
-    } else {
-        _status_msg_ = "Not an editor command: " + _cmd_buf_;
-    }
-
-    _cmd_buf_.clear();
+    api::Refresh();
 }

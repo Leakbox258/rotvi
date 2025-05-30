@@ -22,8 +22,13 @@ const int Key_left = 0404;
 const int Key_right = 0405;
 const int Key_home = 0406;
 const int Key_backspace = 0407;
-const int Key_end = 0526;
+const int Key_end = 0550;
 const int Key_enter = 0527;
+
+const int Key_dl = 0510;
+const int Key_il = 0511;
+const int Key_dc = 0512;
+const int Key_ic = 0513;
 
 inline void Initscr() {
     initscr(); // NOLINT
@@ -62,11 +67,11 @@ inline void Erase() {
 }
 
 inline void Attron() {
-    attron(A_REVERSE); // Highlight status bar
+    attron(A_REVERSE); // Highlight
 }
 
 inline void Attroff() {
-    attroff(A_REVERSE); // Highlight status bar
+    attroff(A_REVERSE); // NOLINT
 }
 
 template <typename... Args> inline void Mvprintw(int y, int x, const char *chs, Args &&...args) {

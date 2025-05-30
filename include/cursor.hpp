@@ -3,12 +3,12 @@
 #define ROTVI_CURSOR_HPP
 
 #include <api.hpp>
-#include <fstream>
-#include <iostream>
 #include <map>
 #include <string>
 #include <tools.hpp>
 #include <vector>
+
+timeExtern;
 
 using string = std::string;
 
@@ -19,8 +19,13 @@ struct config {
     bool autoChangLine;
 };
 
+#define cursorExtern                                                                                                   \
+    extern int term_rows, term_cols;                                                                                   \
+    extern config cursorDefaultCfg;                                                                                    \
+    extern int anonymouseNr;                                                                                           \
+    extern std::map<string, cursor> openedCursors;
+
 extern config cursorDefaultCfg;
-extern int term_rows, term_cols;
 
 class cursor {
 private:
@@ -80,8 +85,11 @@ public:
 
     int lineColNr(int __row) { return _lines_buf_.at(__row).size(); }
 
-    void lineAppend(const string &__content) { _lines_buf_.emplace_back(__content); }
-    void lineAppend(string &&__content) { _lines_buf_.emplace_back(__content); }
+    auto &lineCur() { return _lines_buf_[_row_]; }
+    const auto &lineCur() const { return _lines_buf_[_row_]; }
+
+    template <typename T> void lineAppend(const T &__content) { _lines_buf_.emplace_back(__content); }
+    template <typename T> void lineAppend(T &&__content) { _lines_buf_.emplace_back(__content); }
 
     int mvRight() {
         if (_col_ == lineColNr(_row_)) {
@@ -141,7 +149,7 @@ public:
         if (_row_ < lineNr()) {
             return _col_ = lineColNr(_row_);
         }
-        return _col_ = 0;
+        return _col_ = lineCur().length();
     }
 
     void setToEOF();
@@ -150,7 +158,9 @@ public:
 
     void pressHandler(int ch);
 
-    void processCmd();
+    template <Mode M> void pressHandler(int ch);
+
+    void cmdlineProcessor();
 
     void fileWriteBack(const std::string &filename);
 

@@ -1,7 +1,8 @@
 #include <algorithm> // For std::min/max
 #include <cursor.hpp>
 
-extern int term_rows, term_cols;
+cursorExtern;
+timeExtern;
 
 int main(int argc, char *argv[]) {
     // ncurses initialization
