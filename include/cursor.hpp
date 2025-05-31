@@ -38,6 +38,7 @@ private:
 
     int _row_; // position of current cursor
     int _col_;
+    bool moveIndent = false;
 
     int _win_top_row_; // the bounder of this window
     int _win_left_col_;
@@ -146,6 +147,14 @@ public:
             return _col_ = lineColNr(_row_);
         }
         return _col_ = static_cast<int>(lineCur().length());
+    }
+
+    int cmdmvLeft() {
+        return _col_ = std::max(0, _col_ - 1); // NOLINT
+    }
+
+    int cmdmvRight() {
+        return _col_ = std::min(static_cast<int>(_cmd_buf_.length()), _col_ + 1); // NOLINT
     }
 
     void setToEOF();

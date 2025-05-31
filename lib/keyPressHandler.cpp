@@ -77,6 +77,7 @@ template <> void cursor::pressHandler<Mode::NORMAL>(int ch) {
             chmode(Mode::COMMAND_LINE);
             _cmd_buf_.clear();
             renewStatus(":");
+            _col_ = 0;
             break;
             // Add G to go to last line, gg to go to first line
         case 'G':
@@ -133,21 +134,21 @@ template <> void cursor::pressHandler<Mode::INSERT>(int ch) {
         mvLeft();
         chmode(Mode::NORMAL);
         break;
-    case api::Key_enter: // ncurses defined, or 10 (\n), 13 (\r)
+    case api::Key_enter:
     case '\n':
     case '\r': {
         string current_line_suffix = lineCur().substr(_col_);
         lineCur().erase(_col_); // Remove suffix from current line
         _lines_buf_.insert(_lines_buf_.begin() + _row_ + 1,
                            current_line_suffix); // Insert suffix as new line
-        _row_++;
+        ++_row_;
         _col_ = 0;
     } break;
     default:
         // Insert normal characters
         if (api::Isprint(ch) || ch == '\t') {
             lineCur().insert(_col_, 1, static_cast<char>(ch));
-            _col_++;
+            ++_col_;
         }
         break;
     }
@@ -155,26 +156,34 @@ template <> void cursor::pressHandler<Mode::INSERT>(int ch) {
 
 template <> void cursor::pressHandler<Mode::COMMAND_LINE>(int ch) {
     switch (ch) {
-    case KEY_BACKSPACE:
+    case api::Key_left:
+        cmdmvLeft();
+        break;
+    case api::Key_right:
+        cmdmvRight();
+        break;
+    case api::Key_backspace:
     case 127:
     case 8:
-        if (!_cmd_buf_.empty()) {
-            _cmd_buf_.pop_back();
+        if (_col_ > 0) {
+            _cmd_buf_.erase(_col_ - 1);
+            --_col_;
         }
         break;
     case 27: // Escape key
-        chmode(Mode::COMMAND_LINE);
+        chmode(Mode::NORMAL);
         _cmd_buf_.clear();
         break;
-    case KEY_ENTER:
+    case api::Key_enter:
     case '\n':
     case '\r':
         cmdlineProcessor();
-        chmode(Mode::NORMAL); // return to normal mode
+        chmode(Mode::NORMAL);
         break;
     default:
         if (api::Isprint(ch)) {
-            _cmd_buf_ += static_cast<char>(ch);
+            _cmd_buf_.insert(_col_, 1, static_cast<char>(ch));
+            ++_col_;
         }
         break;
     }

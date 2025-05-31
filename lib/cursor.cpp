@@ -23,6 +23,10 @@ void cursor::setToEOF() {
         lineAppend("");
     }
 
+    if (mode() == Mode::COMMAND_LINE) {
+        return;
+    }
+
     _row_ = std::max(0, std::min(_row_, static_cast<int>(_lines_buf_.size()) - 1));
 
     auto &currentLint = lineCur();
@@ -68,7 +72,7 @@ void cursor::redrawScreen() {
         }
     }
 
-    api::HighLightAttrOn();
+    // api::HighLightAttrOn();
 
     string mode_str;
     switch (_config_.mode) {
@@ -86,7 +90,12 @@ void cursor::redrawScreen() {
     string left_status = mode_str + " " + _file_name_;
     string right_status = "Ln " + std::to_string(_row_ + 1) + ", Col " + std::to_string(_col_ + 1);
 
-    api::Mvprintw(term_rows - 1, 0, "%s", left_status.c_str());
+    if (mode() != Mode::COMMAND_LINE) {
+        api::Mvprintw(term_rows - 1, 0, "%s", left_status.c_str());
+    } else {
+        api::Mvprintw(term_rows - 1, 0, string(left_status.length(), ' ').c_str());
+    }
+
     int right_status_len = static_cast<int>(right_status.length());
     if (term_cols > static_cast<int>(left_status.length()) + right_status_len) {
         api::Mvprintw(term_rows - 1, term_cols - right_status_len - 1, "%s", right_status.c_str());
@@ -101,21 +110,23 @@ void cursor::redrawScreen() {
         api::Mvprintw(term_rows - 1, 0, ":%s", _cmd_buf_.c_str());
     }
 
-    api::HighLightAttrOff();
+    // api::HighLightAttrOff();
 
     // Display status message if any, then clear it
     if (!_status_msg_.empty() && _config_.mode != Mode::COMMAND_LINE) {
-        api::HighLightAttrOn();
+        // api::HighLightAttrOn();
         api::Mvprintw(term_rows - 1, (term_cols - static_cast<int>(_status_msg_.length())) / 2, "%s",
                       _status_msg_.c_str());
-        api::HighLightAttrOff();
+        // api::HighLightAttrOff();
         _status_msg_.clear(); // Show once
     }
 
     // Position the ncurses cursor
     if (_config_.mode == Mode::COMMAND_LINE) {
-        api::Move(term_rows - 1, 1 + static_cast<int>(_cmd_buf_.length()));
+        // api::Move(term_rows - 1, 1 + static_cast<int>(_cmd_buf_.length()));
+        api::Move(term_rows - 1, _col_ + 1);
     } else {
+        ///@todo deal with tab
         api::Move(_row_ - _win_top_row_, _col_ - _win_left_col_);
     }
 
