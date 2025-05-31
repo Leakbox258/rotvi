@@ -51,7 +51,7 @@ template <> void cursor::pressHandler<Mode::NORMAL>(int ch) {
         chmode(Mode::INSERT);
         break;
     case 'x': // Delete character under cursor
-        if (!lineColNr(_row_) && _col_ < static_cast<int>(lineColNr(_row_))) {
+        if (lineColNr(_row_) && _col_ < static_cast<int>(lineColNr(_row_))) {
             lineCur().erase(_col_, 1);
         }
         break;

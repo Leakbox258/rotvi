@@ -127,8 +127,32 @@ void cursor::redrawScreen() {
         api::Move(term_rows - 1, _col_ + 1);
     } else {
         ///@todo deal with tab
-        api::Move(_row_ - _win_top_row_, _col_ - _win_left_col_);
+        api::Move(_row_ - _win_top_row_, calScrCol(*this) - _win_left_col_);
     }
 
     api::Refresh();
+}
+
+int calScrCol(const cursor &cursor_v) {
+    // const std::string &line, int cursor_v._col_, int cursor_v._config_.indent
+    const std::string &line = cursor_v.lineCur();
+
+    int current_screen_col = 0;
+    int line_actual_length = static_cast<int>(line.length());
+
+    for (int i = 0; i < cursor_v._col_; ++i) {
+        if (i < line_actual_length) {
+            // 处理行内实际存在的字符
+            char ch = line[i];
+            if (ch == '\t') {
+                current_screen_col +=
+                    static_cast<int>(cursor_v._config_.indent - (current_screen_col % cursor_v._config_.indent));
+            } else {
+                current_screen_col += 1;
+            }
+        } else {
+            current_screen_col += 1;
+        }
+    }
+    return current_screen_col;
 }

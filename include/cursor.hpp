@@ -14,13 +14,14 @@ enum Mode { NORMAL, INSERT, COMMAND_LINE };
 struct config {
     Mode mode;
     bool autoChangLine;
+    unsigned indent;
 };
 
 class cursor;
 
 inline int term_rows, term_cols;
 
-inline config cursorDefaultCfg = {.mode = Mode::NORMAL, .autoChangLine = false};
+inline config cursorDefaultCfg = {.mode = Mode::NORMAL, .autoChangLine = false, .indent = 8};
 
 inline int anonymouseNr = 0;
 
@@ -170,6 +171,8 @@ public:
     void fileWriteBack(const std::string &filename);
 
     friend cursor fileWriteIn(const string &filename);
+
+    friend int calScrCol(const cursor &);
 
     ~cursor() = default;
 };
