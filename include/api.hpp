@@ -11,7 +11,7 @@
 #endif
 
 #include <cctype>
-#include <stdlib.h>
+#include <cstdlib>
 #include <utility>
 
 namespace api {
@@ -66,11 +66,11 @@ inline void Erase() {
     erase(); // Clear the ncurses virtual screen
 }
 
-inline void Attron() {
+inline void HighLightAttrOn() {
     attron(A_REVERSE); // Highlight
 }
 
-inline void Attroff() {
+inline void HighLightAttrOff() {
     attroff(A_REVERSE); // NOLINT
 }
 
@@ -86,6 +86,18 @@ inline void Mvaddch(int y, int x, char ch) {
     mvaddch(y, x, ch); // Clear the status line
 }
 
+inline bool Has_colors() {
+    return has_colors(); // NOLINT
+}
+
+inline void Start_color() {
+    start_color(); // NOLINT
+}
+
+inline int Use_default_colors() {
+    return use_default_colors(); //  NOLINT
+}
+
 inline void Refresh() {
     refresh(); // NOLINT
 }
@@ -99,5 +111,7 @@ inline void ForceQuit(int code) {
 }
 
 }; // namespace api
+
+void api_init();
 
 #endif

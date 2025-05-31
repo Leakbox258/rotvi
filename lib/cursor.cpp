@@ -1,15 +1,6 @@
 #include <cursor.hpp>
 
-timeExtern;
-
 // Terminal dimensions
-int term_rows, term_cols;
-
-config cursorDefaultCfg = {.mode = Mode::NORMAL, .autoChangLine = false};
-
-int anonymouseNr = 0;
-
-std::map<string, cursor> openedCursors;
 
 void cursor::fileWriteBack(const string &filename) {
 
@@ -71,11 +62,13 @@ void cursor::redrawScreen() {
                               line_to_draw.substr(_win_left_col_, line_to_draw.length()).c_str());
             }
         } else {
-            mvprintw(i, 0, "~");
+            api::ColorAttrOn<color::blue, color::default_color>();
+            api::Mvprintw(i, 0, "~");
+            api::ColorAttroff<color::blue, color::default_color>();
         }
     }
 
-    api::Attron();
+    api::HighLightAttrOn();
 
     string mode_str;
     switch (_config_.mode) {
@@ -108,14 +101,14 @@ void cursor::redrawScreen() {
         api::Mvprintw(term_rows - 1, 0, ":%s", _cmd_buf_.c_str());
     }
 
-    api::Attroff();
+    api::HighLightAttrOff();
 
     // Display status message if any, then clear it
     if (!_status_msg_.empty() && _config_.mode != Mode::COMMAND_LINE) {
-        api::Attron();
+        api::HighLightAttrOn();
         api::Mvprintw(term_rows - 1, (term_cols - static_cast<int>(_status_msg_.length())) / 2, "%s",
                       _status_msg_.c_str());
-        api::Attroff();
+        api::HighLightAttrOff();
         _status_msg_.clear(); // Show once
     }
 

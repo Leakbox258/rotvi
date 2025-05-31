@@ -1,10 +1,8 @@
 #include <cursor.hpp>
 
-timeExtern;
-
 template <> void cursor::pressHandler<Mode::NORMAL>(int ch) {
 
-    switch (ch) {
+    switch (ch) { // NOLINT
     case api::Key_left:
     case 'h':
         mvLeft();

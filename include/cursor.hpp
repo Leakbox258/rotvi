@@ -3,14 +3,11 @@
 #define ROTVI_CURSOR_HPP
 
 #include <api.hpp>
+#include <color.hpp>
 #include <map>
-#include <string>
 #include <tools.hpp>
+#include <utility>
 #include <vector>
-
-timeExtern;
-
-using string = std::string;
 
 enum Mode { NORMAL, INSERT, COMMAND_LINE };
 
@@ -19,13 +16,15 @@ struct config {
     bool autoChangLine;
 };
 
-#define cursorExtern                                                                                                   \
-    extern int term_rows, term_cols;                                                                                   \
-    extern config cursorDefaultCfg;                                                                                    \
-    extern int anonymouseNr;                                                                                           \
-    extern std::map<string, cursor> openedCursors;
+class cursor;
 
-extern config cursorDefaultCfg;
+inline int term_rows, term_cols;
+
+inline config cursorDefaultCfg = {.mode = Mode::NORMAL, .autoChangLine = false};
+
+inline int anonymouseNr = 0;
+
+inline std::map<string, cursor> openedCursors;
 
 class cursor {
 private:
@@ -44,26 +43,24 @@ private:
     int _win_left_col_;
 
 public:
-    explicit cursor(const string &__file = "untiled", config __cfg = cursorDefaultCfg) noexcept
-        : _file_name_(__file), _config_(__cfg) {
+    explicit cursor(string _file = "untiled", config _cfg = cursorDefaultCfg) noexcept
+        : _file_name_(std::move(_file)), _config_(_cfg) {
         _row_ = 0;
         _col_ = 0;
         _win_top_row_ = 0;
         _win_left_col_ = 0;
     }
 
-    const auto &lines() const { return _lines_buf_; }
+    [[nodiscard]] const auto &lines() const { return _lines_buf_; }
 
-    const auto &status() const { return _status_msg_; }
+    [[nodiscard]] const auto &status() const { return _status_msg_; }
 
-    void renewStatus(const string &__new_status) { _status_msg_ = __new_status; }
+    void renewStatus(string &&_new_status) { _status_msg_ = _new_status; }
 
-    void renewStatus(string &&__new_status) { _status_msg_ = __new_status; }
+    [[nodiscard]] Mode mode() const { return _config_.mode; }
 
-    Mode mode() const { return _config_.mode; }
-
-    void chmode(Mode __new_mode) {
-        _config_.mode = __new_mode;
+    void chmode(Mode _new_mode) {
+        _config_.mode = _new_mode;
         if (_config_.mode == Mode::NORMAL) {
             _status_msg_ = "-- NORMAL --";
         } else if (_config_.mode == Mode::INSERT) {
@@ -73,23 +70,22 @@ public:
         }
     }
 
-    bool isAutoChangeline() const { return _config_.autoChangLine; }
+    [[nodiscard]] bool isAutoChangeline() const { return _config_.autoChangLine; }
 
-    void renewFileName(const string &__new_filename) { _file_name_ = __new_filename; }
+    void renewFileName(const string &_new_filename) { _file_name_ = _new_filename; }
 
-    void renewFileName(string &&__new_filename) { _file_name_ = __new_filename; }
+    void renewFileName(string &&_new_filename) { _file_name_ = _new_filename; }
 
     unsigned lineNr() { return _lines_buf_.size(); }
 
     bool lineEmpty() { return _lines_buf_.empty(); }
 
-    int lineColNr(int __row) { return _lines_buf_.at(__row).size(); }
+    int lineColNr(int _row) { return static_cast<int>(_lines_buf_.at(_row).size()); }
 
     auto &lineCur() { return _lines_buf_[_row_]; }
-    const auto &lineCur() const { return _lines_buf_[_row_]; }
+    [[nodiscard]] const auto &lineCur() const { return _lines_buf_[_row_]; }
 
-    template <typename T> void lineAppend(const T &__content) { _lines_buf_.emplace_back(__content); }
-    template <typename T> void lineAppend(T &&__content) { _lines_buf_.emplace_back(__content); }
+    template <typename T> void lineAppend(T &&_content) { _lines_buf_.emplace_back(_content); }
 
     int mvRight() {
         if (_col_ == lineColNr(_row_)) {
@@ -149,7 +145,7 @@ public:
         if (_row_ < lineNr()) {
             return _col_ = lineColNr(_row_);
         }
-        return _col_ = lineCur().length();
+        return _col_ = static_cast<int>(lineCur().length());
     }
 
     void setToEOF();

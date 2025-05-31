@@ -1,14 +1,12 @@
 #include <cursor.hpp>
 
-timeExtern;
-
 void cursor::cmdlineProcessor() {
 
     if (_cmd_buf_.empty()) {
         return;
     }
 
-    if (_cmd_buf_ == "q") {
+    if (_cmd_buf_ == "q") { // NOLINT
         ///@todo Add check for unsaved changes
 
         api::Endwin();

@@ -5,15 +5,13 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #define nop void(0)
 
-#define timeExtern                                                                                                     \
-    extern std::time_t timmer;                                                                                         \
-    extern std::size_t counter;                                                                                        \
-    extern std::fstream *logStream;
-
-timeExtern;
+inline std::time_t timmer = 0;
+inline std::size_t counter = 0;
+inline std::fstream *logStream;
 
 #define timmerOn                                                                                                       \
     {                                                                                                                  \
@@ -28,5 +26,7 @@ timeExtern;
                   << std::endl;                                                                                        \
         timmer = 0;                                                                                                    \
     }
+
+using string = std::string;
 
 #endif

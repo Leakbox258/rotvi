@@ -1,8 +1,5 @@
 #include <cursor.hpp>
 
-extern std::map<string, cursor> openedCursors;
-extern unsigned anonymouseNr;
-
 cursor fileWriteIn(const string &filename) {
     std::ifstream infile(filename);
 
@@ -25,7 +22,7 @@ cursor fileWriteIn(const string &filename) {
         }
 
         if (_lines_buf_.empty()) { // Ensure there's at least one empty line if file is empty
-            _lines_buf_.push_back("");
+            _lines_buf_.emplace_back("");
         }
 
         loadedCursor._status_msg_ = "\"" + filename + "\" loaded.";
