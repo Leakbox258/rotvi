@@ -12,9 +12,12 @@
 
 #include <cctype>
 #include <cstdlib>
+#include <unistd.h>
 #include <utility>
 
 namespace api {
+
+const int Key_escape = 27;
 
 const int Key_down = 0402;
 const int Key_up = 0403;
@@ -29,6 +32,13 @@ const int Key_dl = 0510;
 const int Key_il = 0511;
 const int Key_dc = 0512;
 const int Key_ic = 0513;
+
+const int Key_sright = 0622;
+const int Key_sleft = 0611;
+
+template <typename T> inline constexpr int Ctrl(T &&ch) {
+    return (ch) & 0x1f; // NOLINT
+}
 
 inline void Initscr() {
     initscr(); // NOLINT
@@ -108,6 +118,10 @@ inline void Endwin() {
 
 inline void ForceQuit(int code) {
     exit(code); // NOLINT
+}
+
+inline void Sleep(unsigned time) {
+    sleep(time); // NOLINT
 }
 
 }; // namespace api

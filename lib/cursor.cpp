@@ -114,19 +114,15 @@ void cursor::redrawScreen() {
 
     // Display status message if any, then clear it
     if (!_status_msg_.empty() && _config_.mode != Mode::COMMAND_LINE) {
-        // api::HighLightAttrOn();
         api::Mvprintw(term_rows - 1, (term_cols - static_cast<int>(_status_msg_.length())) / 2, "%s",
                       _status_msg_.c_str());
-        // api::HighLightAttrOff();
         _status_msg_.clear(); // Show once
     }
 
     // Position the ncurses cursor
     if (_config_.mode == Mode::COMMAND_LINE) {
-        // api::Move(term_rows - 1, 1 + static_cast<int>(_cmd_buf_.length()));
         api::Move(term_rows - 1, _col_ + 1);
     } else {
-        ///@todo deal with tab
         api::Move(_row_ - _win_top_row_, calScrCol(*this) - _win_left_col_);
     }
 

@@ -10,6 +10,11 @@
 #include <vector>
 
 enum Mode { NORMAL, INSERT, COMMAND_LINE };
+enum fileType {
+    UNKNOW,
+    CXX,
+    ///@todo more texts
+};
 
 struct config {
     Mode mode;
@@ -44,6 +49,8 @@ private:
     int _win_top_row_; // the bounder of this window
     int _win_left_col_;
 
+    bool modified = false;
+
 public:
     explicit cursor(string _file = "untiled", config _cfg = cursorDefaultCfg) noexcept
         : _file_name_(std::move(_file)), _config_(_cfg) {
@@ -62,14 +69,15 @@ public:
     [[nodiscard]] Mode mode() const { return _config_.mode; }
 
     void chmode(Mode _new_mode) {
-        _config_.mode = _new_mode;
-        if (_config_.mode == Mode::NORMAL) {
+        if (_new_mode == Mode::NORMAL && _config_.mode != Mode::COMMAND_LINE) {
             _status_msg_ = "-- NORMAL --";
-        } else if (_config_.mode == Mode::INSERT) {
+        } else if (_new_mode == Mode::INSERT) {
             _status_msg_ = "-- INSERT --";
-        } else if (_config_.mode == Mode::COMMAND_LINE) {
+        } else if (_new_mode == Mode::COMMAND_LINE) {
             _status_msg_ = "-- COMMAND LINE --";
         }
+
+        _config_.mode = _new_mode;
     }
 
     [[nodiscard]] bool isAutoChangeline() const { return _config_.autoChangLine; }

@@ -2,6 +2,8 @@
 
 template <> void cursor::pressHandler<Mode::NORMAL>(int ch) {
 
+    renewStatus("-- NORMAL --");
+
     switch (ch) { // NOLINT
     case api::Key_left:
     case 'h':
@@ -53,6 +55,7 @@ template <> void cursor::pressHandler<Mode::NORMAL>(int ch) {
     case 'x': // Delete character under cursor
         if (lineColNr(_row_) && _col_ < static_cast<int>(lineColNr(_row_))) {
             lineCur().erase(_col_, 1);
+            modified = true;
         }
         break;
     case 'd':              // Potentially start 'dd'
@@ -111,26 +114,31 @@ template <> void cursor::pressHandler<Mode::INSERT>(int ch) {
         break;
     case api::Key_backspace: // Typically 127 or 263, or '\b'
     case 127:                // ASCII DEL
-    case 8:                  // ASCII BS (often map to the same in raw mode by terminals)
+    case api::Ctrl('h'):     // ASCII BS (often map to the same in raw mode by terminals)
         if (_col_ > 0) {
             lineCur().erase(_col_ - 1, 1);
             --_col_;
+            modified = true;
         } else if (_row_ > 0) {
             // Backspace at beginning of line
             // Join with previous line
-            string &current_line_content = lineCur();
+            string current_line_content = lineCur();
 
             _lines_buf_.erase(_lines_buf_.begin() + _row_);
             --_row_;
             _col_ = static_cast<int>(lineCur().length());
 
             lineCur() += current_line_content;
+            modified = true;
         }
         break;
     case api::Key_dc:
-        lineCur().erase(_col_, 1);
+        if (!lineCur().empty() && _col_ < lineCur().length()) {
+            lineCur().erase(_col_, 1);
+            modified = true;
+        }
         break;
-    case 27: // Escape key
+    case api::Key_escape: // Escape key
         mvLeft();
         chmode(Mode::NORMAL);
         break;
@@ -143,12 +151,16 @@ template <> void cursor::pressHandler<Mode::INSERT>(int ch) {
                            current_line_suffix); // Insert suffix as new line
         ++_row_;
         _col_ = 0;
+
+        modified = true;
     } break;
     default:
         // Insert normal characters
         if (api::Isprint(ch) || ch == '\t') {
             lineCur().insert(_col_, 1, static_cast<char>(ch));
             ++_col_;
+
+            modified = true;
         }
         break;
     }
@@ -162,15 +174,15 @@ template <> void cursor::pressHandler<Mode::COMMAND_LINE>(int ch) {
     case api::Key_right:
         cmdmvRight();
         break;
+    case api::Ctrl('h'):
     case api::Key_backspace:
     case 127:
-    case 8:
         if (_col_ > 0) {
             _cmd_buf_.erase(_col_ - 1);
             --_col_;
         }
         break;
-    case 27: // Escape key
+    case api::Key_escape: // Escape key
         chmode(Mode::NORMAL);
         _cmd_buf_.clear();
         break;
