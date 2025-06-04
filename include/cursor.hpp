@@ -3,18 +3,14 @@
 #define ROTVI_CURSOR_HPP
 
 #include <api.hpp>
-#include <color.hpp>
 #include <map>
+#include <syntax/CXX/match.hpp>
+///@todo add more...
 #include <tools.hpp>
 #include <utility>
 #include <vector>
 
 enum Mode { NORMAL, INSERT, COMMAND_LINE };
-enum fileType {
-    UNKNOW,
-    CXX,
-    ///@todo more texts
-};
 
 struct config {
     Mode mode;
@@ -26,13 +22,19 @@ class cursor;
 
 inline int term_rows, term_cols;
 
-inline config cursorDefaultCfg = {.mode = Mode::NORMAL, .autoChangLine = false, .indent = 8};
+inline config cursorDefaultCfg = {
+    .mode = Mode::NORMAL,
+    .autoChangLine = false,
+    .indent = 8,
+};
 
 inline int anonymouseNr = 0;
 
-inline std::map<string, cursor> openedCursors;
-
 class cursor {
+public:
+    friend class syntax::ColorFmtBase;
+    template <syntax::fileType Type> friend class syntax::ColorFmt;
+
 private:
     string _file_name_{};
     string _status_msg_{};
@@ -51,9 +53,11 @@ private:
 
     bool modified = false;
 
+    const syntax::ColorFmtBase &printer;
+
 public:
-    explicit cursor(string _file = "untiled", config _cfg = cursorDefaultCfg) noexcept
-        : _file_name_(std::move(_file)), _config_(_cfg) {
+    explicit cursor(string _file, const syntax::ColorFmtBase &_fmt, config _cfg = cursorDefaultCfg) noexcept
+        : _file_name_(std::move(_file)), _config_(_cfg), printer(_fmt) {
         _row_ = 0;
         _col_ = 0;
         _win_top_row_ = 0;
@@ -178,15 +182,15 @@ public:
 
     void fileWriteBack(const std::string &filename);
 
-    friend cursor fileWriteIn(const string &filename);
+    friend std::unique_ptr<cursor> fileWriteIn(const string &filename);
 
     friend int calScrCol(const cursor &);
 
     ~cursor() = default;
 };
 
-cursor fileWriteIn(const string &filename);
+std::unique_ptr<cursor> fileWriteIn(const string &filename);
 
-cursor fileWriteIn();
+std::unique_ptr<cursor> fileWriteIn();
 
 #endif

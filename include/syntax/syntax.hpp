@@ -5,105 +5,150 @@
 #include <color.hpp>
 #include <list>
 #include <regex>
-#include <type_traits>
 #include <vector>
+
+inline string getExtension(const string &filename) {
+    auto pos = filename.find_last_of('.');
+    if (pos != string::npos && pos + 1 < filename.length()) {
+        return filename.substr(pos + 1);
+    }
+    return "";
+}
+class cursor; // pre declaration
 
 namespace syntax {
 
-enum fileType {
-    UNKNOWN,
+enum fileType : u_int32_t {
+    UNKNOWN = 0,
     CXX
     ///@todo add more...
 };
 
-template <typename T> inline std::vector<const char *> tokenlizeImpl(T &&raw_text) {
+inline static std::map<string, fileType> fileTypeMap = {
+    {"cpp", CXX}, {"cxx", CXX}, {"cc", CXX},  {"c", CXX},     {"h", CXX},     {"hpp", CXX}, {"hxx", CXX},
+    {"hh", CXX},  {"cu", CXX},  {"cuh", CXX}, {"cuhpp", CXX}, {"cuhxx", CXX}, {"cuhh", CXX}};
 
-    const char *token_flow_begin;
-    std::vector<const char *> token_list{};
+struct token {
+    const char *cstr;
+    int y;
+    int x;
+    int len;
 
-    if constexpr (std::is_same_v<string, std::remove_const_t<std::remove_reference_t<T>>>) {
+    token(const char *const _cstr, int _y, int _x, int _len) : cstr(_cstr), y(_y), x(_x), len(_len) {}
+    ~token() = default;
+};
+
+template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
+
+    char *token_flow_begin;
+    std::vector<token> token_list;
+
+    if constexpr (std::is_same_v<string, std::remove_cvref_t<T>>) {
         token_flow_begin = raw_text.c_str();
-    } else if constexpr (std::is_same_v<char *, std::remove_const_t<std::remove_reference_t<T>>>) {
+    } else if constexpr (std::is_same_v<char *, std::remove_cvref_t<T>>) {
         token_flow_begin = raw_text;
     } else {
         static_assert(false);
     }
 
-    token_list.emplace_back(token_flow_begin);
-
     char *current_pos = token_flow_begin;
-    char *comment_pos = nullptr;
+    char *last_pos = current_pos;
+    int y_last = 0, x_last = 0;
+    int y = 0, x = 0;
 
     while (*current_pos) {
-
         ///@brief Handle comments
         if (*current_pos == '/' && *(current_pos + 1) == '/') {
-            if (comment_pos == nullptr) {
-                comment_pos = current_pos;
+            int comment_len = 0;
+
+            if (last_pos == nullptr) {
+                last_pos = current_pos;
             }
             // Skip to the end of the line
             while (*current_pos && *current_pos != '\n') {
                 current_pos += 1;
+                ++x;
+                ++comment_len;
             }
-            token_list.emplace_back(comment_pos);
-            comment_pos = nullptr; // Reset for next comment
+
+            x = 0, ++y, ++comment_len;
+            token_list.emplace_back(last_pos, y_last, x_last, comment_len);
+
+            y_last = y, x_last = x;
+            last_pos = nullptr; // Reset for next comment
             continue;
         } else if (*current_pos == '/' && *(current_pos + 1) == '*') {
-            if (comment_pos == nullptr) {
-                comment_pos = current_pos;
+            int comment_len = 0;
+
+            if (last_pos == nullptr) {
+                last_pos = current_pos;
             }
             // Skip until we find the closing */
             while (*current_pos && !(*current_pos == '*' && *(current_pos + 1) == '/')) {
                 current_pos += 1;
+
+                *current_pos == '\n' ? x = 0, ++y : ++x;
+                ++comment_len;
             }
 
             if (*current_pos) {   // If we found the closing */
                 current_pos += 2; // Skip past */
-                token_list.emplace_back(comment_pos);
-                comment_pos = nullptr; // Reset for next comment
+                x += 2;
+                comment_len += 2;
+                token_list.emplace_back(last_pos, y_last, x_last, comment_len);
+
+                last_pos = nullptr; // Reset for next comment
+                y_last = y, x_last = x;
                 continue;
             }
         }
 
         if (inSet(*current_pos, '\t', '\r', '\n', ' ')) {
+
+            token_list.emplace_back(last_pos, y_last, x_last, static_cast<int>(current_pos - last_pos));
+
+            if (*current_pos == '\n') {
+                x = 0, ++y;
+            } else {
+                token_list.emplace_back(current_pos, y, x, 1);
+                ++x;
+            }
+
             current_pos += 1;
-            token_list.emplace_back(current_pos);
+            last_pos = current_pos;
+            y_last = y, x_last = x;
         } else if (inSet(*current_pos, '(', ')', '[', ']', '{', '}', '+', '-', '*', '!', '@', '#', '$', '%', '^', '&',
                          '=', '`', '~', '\\', ':', ';', '\'', '\"', ',', '<', '.', '>', '/', '?')) {
-            token_list.emplace_back(current_pos);
+
+            // current_pos - last_pos == 0 :: exsist but won't display
+            token_list.emplace_back(last_pos, y_last, x_last, static_cast<int>(current_pos - last_pos));
+
+            token_list.emplace_back(current_pos, y, x, 1);
+
+            ++x;
             current_pos += 1;
+            last_pos = current_pos;
+            x_last = x;
         } else {
             current_pos += 1;
+            ++x;
         }
     }
 
     return token_list;
 }
 
-template <typename T> struct is_sequential : std::false_type {};
-template <typename T, typename Allocator> struct is_sequential<std::list<T, Allocator>> : std::true_type {};
-template <typename T, typename Allocator> struct is_sequential<std::vector<T, Allocator>> : std::true_type {};
+template <fileType type>
+inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatchImpl(const char *token_Cstr);
 
-template <typename T> inline std::vector<const char *> tokenlize(T &&raw_text) {
-    static_assert(is_sequential<std::remove_const_t<std::remove_reference_t<T>>>::value);
-
-    std::list<const char *> token_flow;
-
-    for (auto raw_text_line : raw_text) {
-        token_flow.splice(token_flow.end(), tokenlizeImpl(raw_text_line));
-    }
-
-    return std::vector<const char *>(token_flow);
-}
-
-template <fileType type> inline std::pair<api::color, api::color> colorMatchImpl(const char *token_Cstr);
-
-template <fileType type, typename T> inline std::pair<api::color, api::color> colorMatch(T &&token) {
+template <fileType type, typename T>
+inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatch(T &&token) {
     const char *token_Cstr;
 
-    if constexpr (std::is_same_v<string, std::remove_const_t<std::remove_reference_t<T>>>) {
+    if constexpr (std::is_same_v<string, std::remove_cvref_t<T>>) {
         token_Cstr = token.c_str();
-    } else if constexpr (std::is_same_v<char *, std::remove_const_t<std::remove_reference_t<T>>>) {
+    } else if constexpr (std::is_same_v<const char *, std::remove_cvref_t<T>> ||
+                         std::is_same_v<char *, std::remove_cvref_t<T>>) {
         token_Cstr = token;
     } else {
         static_assert(false);
@@ -112,6 +157,32 @@ template <fileType type, typename T> inline std::pair<api::color, api::color> co
     return colorMatchImpl<type>(token_Cstr);
 }
 
-}; // namespace syntax
+struct ColorFmtBase {
+    virtual void operator()(const cursor &printCursor) const = 0;
+};
 
+template <fileType type> struct ColorFmt : public ColorFmtBase {
+    void operator()(const cursor &printCursor) const override;
+};
+
+template <> struct ColorFmt<UNKNOWN> : public ColorFmtBase {
+    void operator()(const cursor &printCursor) const override;
+};
+
+inline const ColorFmtBase &getColorFmt(const string &filename) {
+    static ColorFmt<fileType::CXX> cxxFmt;
+    static ColorFmt<fileType::UNKNOWN> unknownFmt;
+
+    auto type = fileTypeMap[getExtension(filename)];
+
+    switch (type) {
+    case fileType::CXX:
+        return cxxFmt;
+        ///@todo add more...
+    default:
+        return unknownFmt;
+    }
+
+}; // namespace syntax
+} // namespace syntax
 #endif

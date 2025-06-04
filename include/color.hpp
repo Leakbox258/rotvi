@@ -42,8 +42,12 @@ inline constexpr std::pair<short, short> bitUnPack(u_int8_t pack) {
     return unpack;
 }
 
-inline unsigned pairCnter = 0;
+inline void Init_pair(u_int8_t pack) {
+    auto unpack = bitUnPack(pack);
+    init_pair(static_cast<short>(pack), unpack.first, unpack.second); // NOLINT
+}
 
+///@brief static color pair register
 namespace detail {
 
 inline std::set<u_int8_t> &getColorPacks() {
@@ -57,35 +61,33 @@ inline void RegisterHelper(color Front, color Back) noexcept {
 
 template <color Front, color Back> struct CTRegistrar {
     inline static bool inUse = (RegisterHelper(Front, Back), true);
-
-    // constexpr CTRegistrar() {
-    //     inUse = true;
-    //     RegisterHelper(Front, Back); // NOLINT
-    // }
 };
 
 }; // namespace detail
 
-template <color Front, color Back> inline void ColorAttrOn() {
-    constexpr auto pack = bitPack(Front, Back);
+struct ColorAttr {
+    virtual void operator()() const = 0;
+};
 
-    [[maybe_unused]] static detail::CTRegistrar<Front, Back> uniqueRegi;
-    (void)uniqueRegi.inUse;
+template <color Front, color Back> struct ColorAttrOn : public ColorAttr {
+    void operator()() const override {
+        constexpr auto pack = bitPack(Front, Back);
 
-    attron(COLOR_PAIR(static_cast<short>(pack)));
-}
+        [[maybe_unused]] static detail::CTRegistrar<Front, Back> uniqueRegi;
+        (void)uniqueRegi.inUse;
 
-template <color Front, color Back> inline void ColorAttroff() {
-    constexpr auto pack = bitPack(Front, Back);
-    /// @todo add static object check here
+        attron(COLOR_PAIR(static_cast<short>(pack)));
+    }
+};
 
-    attroff(COLOR_PAIR(static_cast<short>(pack)));
-}
+template <color Front, color Back> struct ColorAttrOff : public ColorAttr {
+    void operator()() const override {
+        constexpr auto pack = bitPack(Front, Back);
+        /// @todo add static object check here
 
-inline void Init_pair(u_int8_t pack) {
-    auto unpack = bitUnPack(pack);
-    init_pair(static_cast<short>(pack), unpack.first, unpack.second); // NOLINT
-}
+        attroff(COLOR_PAIR(static_cast<short>(pack)));
+    }
+};
 
 }; // namespace api
 

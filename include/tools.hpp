@@ -5,7 +5,10 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <string>
+#include <type_traits>
+#include <typeinfo>
 
 #define nop void(0)
 
@@ -26,6 +29,10 @@ inline std::fstream *logStream;
                   << std::endl;                                                                                        \
         timmer = 0;                                                                                                    \
     }
+
+template <typename T> struct is_sequential_counter : std::false_type {};
+template <typename T, typename Allocator> struct is_sequential_counter<std::vector<T, Allocator>> : std::true_type {};
+template <typename T, typename Allocator> struct is_sequential_counter<std::list<T, Allocator>> : std::true_type {};
 
 using string = std::string;
 

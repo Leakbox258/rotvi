@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 project(rotvi)
 
-option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+option(ENABLE_ASAN "Enable AddressSanitizer" ON)
 
 find_package(Curses REQUIRED)
 
@@ -24,6 +24,8 @@ add_executable(rotvi ${LIB})
 
 target_include_directories(rotvi 
     PRIVATE ${CMAKE_SOURCE_DIR}/include
+    PRIVATE ${CMAKE_SOURCE_DIR}/include/syntax
+    PRIVATE ${CMAKE_SOURCE_DIR}/include/syntax/CXX
     PRIVATE ${CURSES_INCLUDE_DIR}
 )
 

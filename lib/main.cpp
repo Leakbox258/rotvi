@@ -5,22 +5,22 @@ int main(int argc, char *argv[]) {
 
     api_init();
 
-    cursor mainCursor;
+    std::unique_ptr<cursor> mainCursor;
     if (argc > 1) {
-        mainCursor = fileWriteIn(argv[1]);
+        mainCursor = std::move(fileWriteIn(argv[1]));
     } else {
-        mainCursor = fileWriteIn();
+        mainCursor = std::move(fileWriteIn());
     }
 
-    mainCursor.setToEOF(); // Initial clamp
+    mainCursor->setToEOF(); // Initial clamp
 
     int ch;
     while (true) {
-        mainCursor.setToEOF();
-        mainCursor.redrawScreen();
+        mainCursor->setToEOF();
+        mainCursor->redrawScreen();
         ch = api::Getch();
 
-        mainCursor.pressHandler(ch);
+        mainCursor->pressHandler(ch);
     }
 
     // ncurses cleanup
