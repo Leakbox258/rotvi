@@ -141,9 +141,10 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
             current_pos += 1;
             last_pos = current_pos;
             y_last = y, x_last = x;
-        } else if (inSet(*current_pos, '(', ')', '[', ']', '{', '}', '+', '-', '*', '!', '@', '#', '$', '%', '^', '&',
-                         '=', '`', '~', '\\', ':', ';', '\'', '\"', ',', '<', '.', '>', '/', '?')) {
-
+            // } else if (inSet(*current_pos, '(', ')', '[', ']', '{', '}', '+', '-', '*', '!', '@', '#', '$', '%', '^', '&',
+            //                  '=', '`', '~', '\\', ':', ';', '\'', '\"', ',', '<', '.', '>', '/', '?')) {
+        } else if (inSet(*current_pos, '(', ')', '[', ']', '{', '}', '+', '*', '!', '@', '#', '$', '%', '^', '&', '=',
+                         '`', '~', '\\', ':', ';', ',', '<', '.', '>', '/', '?')) {
             if (int len = static_cast<int>(current_pos - last_pos)) {
                 token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), len);
             }
@@ -164,10 +165,10 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
 }
 
 template <fileType type>
-inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatchImpl(const char *token_Cstr);
+inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatchImpl(const char *token_Cstr, int length);
 
 template <fileType type, typename T>
-inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatch(T &&token) {
+inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatch(T &&token, int length) {
     const char *token_Cstr;
 
     if constexpr (std::is_same_v<string, std::remove_cvref_t<T>>) {
@@ -179,7 +180,7 @@ inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatch(T &&
         static_assert(false);
     }
 
-    return colorMatchImpl<type>(token_Cstr);
+    return colorMatchImpl<type>(token_Cstr, length);
 }
 
 struct ColorFmtBase {

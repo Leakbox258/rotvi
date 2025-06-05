@@ -30,11 +30,14 @@ static const std::vector<const char *> keywords = {
     "volatile",      "wchar_t",     "while",      "xor",      "xor_eq"};
 
 static const std::regex numeric_rx(
-    R"(^(0[xX][0-9a-fA-F]+[uUlL]{0,3}|0[0-7]*[uUlL]{0,3}|[1-9][0-9]*[uUlL]{0,3}|([0-9]*\.[0-9]+|[0-9]+\.)([eE][+-]?[0-9]+)?[fFlL]?|[0-9]+[eE][+-]?[0-9]+[fFlL]?)$)");
-static const std::regex string_lit_rx(R"(^(u8|u|U|L)?\"([^\"\\]|\\.)*\")");
-static const std::regex char_lit_rx(R"(^(u8|u|U|L)?\'([^'\\]|\\.)\')");
-static const std::regex identifier_rx(R"(^[a-zA-Z_][a-zA-Z0-9_]*$)");
-static const std::regex comments_rx(R"((\/\/.*|\/\*[\s\S]*?\*\/))");
+    R"(^(0[xX][0-9a-fA-F]+[uUlL]{0,3}|0[0-7]*[uUlL]{0,3}|[1-9][0-9]*[uUlL]{0,3}|([0-9]*\.[0-9]+|[0-9]+\.[0-9]*)([eE][+-]?[0-9]+)?[fFlL]?|[0-9]+[eE][+-]?[0-9]+[fFlL]?)$)");
 
+static const std::regex string_lit_rx(R"((?:u8|u|U|L)?\"(?:[^\"\\\n]|\\.)*\")");
+
+static const std::regex char_lit_rx(R"(^(u8|u|U|L)?\'([^'\\]|\\.)\')");
+
+static const std::regex identifier_rx(R"(^[a-zA-Z_][a-zA-Z0-9_]*$)");
+
+static const std::regex comments_rx(R"(//.*|/\*[\s\S]*?\*/)");
 }; // namespace CXX_syntax
 #endif

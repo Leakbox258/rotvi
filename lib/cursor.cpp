@@ -57,25 +57,6 @@ void cursor::redrawScreen() {
 
     printer(*this);
 
-    // for (int i = 0; i < term_rows - 1; ++i) { // -1 for status bar
-    //     int doc_line_idx = _win_top_row_ + i;
-    //     if (doc_line_idx < static_cast<int>(_lines_buf_.size())) {
-    //         const string &line_to_draw = _lines_buf_[doc_line_idx];
-    //         // Handle horizontal scrolling
-    //         int len_to_draw = static_cast<int>(line_to_draw.size()) - _win_left_col_;
-    //         if (len_to_draw > 0) {
-    //             api::Mvprintw(i, 0, "%.*s", term_cols,
-    //                           line_to_draw.substr(_win_left_col_, line_to_draw.length()).c_str());
-    //         }
-    //     } else {
-    //         api::ColorAttrOn<color::blue, color::default_color>();
-    //         api::Mvprintw(i, 0, "~");
-    //         api::ColorAttrOff<color::blue, color::default_color>();
-    //     }
-    // }
-
-    // api::HighLightAttrOn();
-
     string mode_str;
     switch (_config_.mode) {
     case Mode::NORMAL:

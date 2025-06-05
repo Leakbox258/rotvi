@@ -38,7 +38,6 @@ template <> void ColorFmt<syntax::CXX>::operator()(const cursor &printCursor) co
             continue;
         }
 
-        // raw_text_ptr = std::copy(line.c_str(), line.c_str() + strlen(line.c_str()), raw_text_ptr);
         strncpy(raw_text_ptr, line.c_str(), line.length());
         strncat(raw_text_ptr, "\n", 1);
         raw_text_ptr += strlen(line.c_str()) + 1;
@@ -48,7 +47,7 @@ template <> void ColorFmt<syntax::CXX>::operator()(const cursor &printCursor) co
 
     for (auto &[token, y, x, len] : tokens) { // use const auto & will be tricky
 
-        auto color_pair = colorMatch<CXX>(token);
+        auto color_pair = colorMatch<CXX>(token, len);
 
         color_pair.first(); // color attr on
 
