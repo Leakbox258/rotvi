@@ -53,12 +53,30 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
 
     char *current_pos = token_flow_begin;
     char *last_pos = current_pos;
+    std::vector<int> tab_pos{};
     int y_last = 0, x_last = 0;
     int y = 0, x = 0;
 
+    auto getDisplayX = [&tab_pos](int _x) {
+        int currentColumn = 0;
+        const int tabWidth = 8;
+
+        for (int i = 0; i < _x; ++i) {
+            if (std::find(tab_pos.begin(), tab_pos.end(), i) != tab_pos.end()) {
+                currentColumn = ((currentColumn / tabWidth) + 1) * tabWidth;
+            } else {
+                currentColumn += 1;
+            }
+        }
+
+        return currentColumn;
+    };
+
     while (*current_pos) {
         ///@brief Handle comments
+        ///@note in comments, not neccessary to add tab_pos, because they'll be printed all in once
         if (*current_pos == '/' && *(current_pos + 1) == '/') {
+
             int comment_len = 0;
 
             if (last_pos == nullptr) {
@@ -71,11 +89,12 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
                 ++comment_len;
             }
 
-            x = 0, ++y, ++comment_len;
+            x = 0, ++y, tab_pos.clear(), ++comment_len;
             token_list.emplace_back(last_pos, y_last, x_last, comment_len);
 
             y_last = y, x_last = x;
-            last_pos = nullptr; // Reset for next comment
+            current_pos += 1; // skip '\n'
+            last_pos = current_pos;
             continue;
         } else if (*current_pos == '/' && *(current_pos + 1) == '*') {
             int comment_len = 0;
@@ -97,7 +116,7 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
                 comment_len += 2;
                 token_list.emplace_back(last_pos, y_last, x_last, comment_len);
 
-                last_pos = nullptr; // Reset for next comment
+                last_pos = current_pos; // Reset for next comment
                 y_last = y, x_last = x;
                 continue;
             }
@@ -105,12 +124,17 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
 
         if (inSet(*current_pos, '\t', '\r', '\n', ' ')) {
 
-            token_list.emplace_back(last_pos, y_last, x_last, static_cast<int>(current_pos - last_pos));
+            token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), static_cast<int>(current_pos - last_pos));
 
             if (*current_pos == '\n') {
                 x = 0, ++y;
+                tab_pos.clear();
+            } else if (*current_pos == '\t') {
+                token_list.emplace_back(current_pos, y, getDisplayX(x), 1);
+                tab_pos.emplace_back(x);
+                ++x;
             } else {
-                token_list.emplace_back(current_pos, y, x, 1);
+                token_list.emplace_back(current_pos, y, getDisplayX(x), 1);
                 ++x;
             }
 
@@ -120,10 +144,11 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
         } else if (inSet(*current_pos, '(', ')', '[', ']', '{', '}', '+', '-', '*', '!', '@', '#', '$', '%', '^', '&',
                          '=', '`', '~', '\\', ':', ';', '\'', '\"', ',', '<', '.', '>', '/', '?')) {
 
-            // current_pos - last_pos == 0 :: exsist but won't display
-            token_list.emplace_back(last_pos, y_last, x_last, static_cast<int>(current_pos - last_pos));
+            if (int len = static_cast<int>(current_pos - last_pos)) {
+                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), len);
+            }
 
-            token_list.emplace_back(current_pos, y, x, 1);
+            token_list.emplace_back(current_pos, y, getDisplayX(x), 1);
 
             ++x;
             current_pos += 1;

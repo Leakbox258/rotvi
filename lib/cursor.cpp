@@ -131,6 +131,7 @@ void cursor::redrawScreen() {
     api::Refresh();
 }
 
+///@brief calculate where to display the cursor with tabs exsist
 int calScrCol(const cursor &cursor_v) {
     // const std::string &line, int cursor_v._col_, int cursor_v._config_.indent
     const std::string &line = cursor_v.lineCur();
@@ -140,7 +141,6 @@ int calScrCol(const cursor &cursor_v) {
 
     for (int i = 0; i < cursor_v._col_; ++i) {
         if (i < line_actual_length) {
-            // 处理行内实际存在的字符
             char ch = line[i];
             if (ch == '\t') {
                 current_screen_col +=
