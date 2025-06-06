@@ -33,8 +33,10 @@ struct token {
     int y;
     int x;
     int len;
+    enum attr : u_int32_t { None, Function } tokenAttr;
 
-    token(const char *const _cstr, int _y, int _x, int _len) : cstr(_cstr), y(_y), x(_x), len(_len) {}
+    token(const char *const _cstr, int _y, int _x, int _len, attr _attr = None)
+        : cstr(_cstr), y(_y), x(_x), len(_len), tokenAttr(_attr) {}
     ~token() = default;
 };
 
@@ -75,6 +77,7 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
     while (*current_pos) {
         ///@brief Handle comments
         ///@note in comments, not neccessary to add tab_pos, because they'll be printed all in once
+        ///@note but need to handle the tab before this comment in the same line
         if (*current_pos == '/' && *(current_pos + 1) == '/') {
 
             int comment_len = 0;
@@ -89,9 +92,10 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
                 ++comment_len;
             }
 
-            x = 0, ++y, tab_pos.clear(), ++comment_len;
-            token_list.emplace_back(last_pos, y_last, x_last, comment_len);
+            ++comment_len;
+            token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), comment_len);
 
+            x = 0, ++y, tab_pos.clear();
             y_last = y, x_last = x;
             current_pos += 1; // skip '\n'
             last_pos = current_pos;
@@ -114,16 +118,62 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
                 current_pos += 2; // Skip past */
                 x += 2;
                 comment_len += 2;
-                token_list.emplace_back(last_pos, y_last, x_last, comment_len);
+                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), comment_len);
 
                 last_pos = current_pos; // Reset for next comment
                 y_last = y, x_last = x;
                 continue;
+            } else {
+                // search */ but EOF
+                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), comment_len);
+                continue;
             }
         }
 
-        if (inSet(*current_pos, '\t', '\r', '\n', ' ')) {
+        ///@brief handle strings
+        else if (*current_pos == '"') {
 
+            if (int len = static_cast<int>(current_pos - last_pos)) {
+                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), len);
+            }
+
+            x_last = x;
+            if (*(current_pos - 1) == '\\') {
+
+                current_pos += 1;
+                // ++x;
+                continue;
+            }
+
+            int string_len = 0;
+
+            last_pos = current_pos;
+
+            current_pos += 1;
+            ++string_len, ++x;
+
+            while (*current_pos && (*current_pos != '\"' || *(current_pos - 1) == '\\')) {
+                *current_pos == '\n' ? x = 0, ++y : ++x;
+                ++string_len;
+
+                current_pos += 1;
+            }
+
+            if (*current_pos) {
+                current_pos += 1;
+                x += 1; // skip
+                string_len += 1;
+            }
+
+            token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), string_len);
+
+            last_pos = current_pos;
+            y_last = y, x_last = x;
+
+            continue;
+        }
+
+        else if (inSet(*current_pos, '\t', '\r', '\n', ' ')) {
             token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), static_cast<int>(current_pos - last_pos));
 
             if (*current_pos == '\n') {

@@ -45,7 +45,7 @@ template <> void ColorFmt<syntax::CXX>::operator()(const cursor &printCursor) co
 
     auto tokens = tokenlize(raw_text.get());
 
-    for (auto &[token, y, x, len] : tokens) { // use const auto & will be tricky
+    for (auto &[token, y, x, len, attr] : tokens) { // use const auto & will be tricky
 
         auto color_pair = colorMatch<CXX>(token, len);
 

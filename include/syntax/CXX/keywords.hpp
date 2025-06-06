@@ -9,7 +9,6 @@
 #include <vector>
 
 namespace CXX_syntax {
-///@note 除去default之外, 勉强能用7种颜色
 
 static const std::vector<const char *> keywords = {
     "alignas", // NOLINT
@@ -32,7 +31,8 @@ static const std::vector<const char *> keywords = {
 static const std::regex numeric_rx(
     R"(^(0[xX][0-9a-fA-F]+[uUlL]{0,3}|0[0-7]*[uUlL]{0,3}|[1-9][0-9]*[uUlL]{0,3}|([0-9]*\.[0-9]+|[0-9]+\.[0-9]*)([eE][+-]?[0-9]+)?[fFlL]?|[0-9]+[eE][+-]?[0-9]+[fFlL]?)$)");
 
-static const std::regex string_lit_rx(R"((?:u8|u|U|L)?\"(?:[^\"\\\n]|\\.)*\")");
+// static const std::regex string_lit_rx(R"((?:u8|u|U|L)?\"(?:[^\"\\\n]|\\.)*\")");
+static const std::regex string_lit_rx(R"((?:u8|u|U|L)?\"(?:[^\"\\]|\\[\s\S])*?\")");
 
 static const std::regex char_lit_rx(R"(^(u8|u|U|L)?\'([^'\\]|\\.)\')");
 

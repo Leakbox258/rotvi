@@ -9,8 +9,8 @@
 
 namespace api {
 
+///@note attr get from ncurser
 inline bool has_color = false;
-/// @todo deal with use_default
 inline bool use_default = false;
 
 enum color : int8_t {
