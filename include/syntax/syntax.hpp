@@ -80,11 +80,18 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
         ///@note but need to handle the tab before this comment in the same line
         if (*current_pos == '/' && *(current_pos + 1) == '/') {
 
+            if (int len = static_cast<int>(current_pos - last_pos)) {
+                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), len);
+            }
+
+            x_last = x;
+
             int comment_len = 0;
 
-            if (last_pos == nullptr) {
-                last_pos = current_pos;
-            }
+            // if (last_pos == nullptr) {
+            last_pos = current_pos;
+            // }
+
             // Skip to the end of the line
             while (*current_pos && *current_pos != '\n') {
                 current_pos += 1;
@@ -101,16 +108,24 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
             last_pos = current_pos;
             continue;
         } else if (*current_pos == '/' && *(current_pos + 1) == '*') {
+
+            if (int len = static_cast<int>(current_pos - last_pos)) {
+                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), len);
+            }
+
+            x_last = x;
+
             int comment_len = 0;
 
-            if (last_pos == nullptr) {
-                last_pos = current_pos;
-            }
+            // if (last_pos == nullptr) {
+            last_pos = current_pos;
+            // }
             // Skip until we find the closing */
             while (*current_pos && !(*current_pos == '*' && *(current_pos + 1) == '/')) {
+                *current_pos == '\n' ? x = 0, ++y : ++x;
+
                 current_pos += 1;
 
-                *current_pos == '\n' ? x = 0, ++y : ++x;
                 ++comment_len;
             }
 
