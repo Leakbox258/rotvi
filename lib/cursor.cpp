@@ -106,7 +106,8 @@ void cursor::redrawScreen() {
     if (_config_.mode == Mode::COMMAND_LINE) {
         api::Move(term_rows - 1, _col_ + 1);
     } else {
-        api::Move(_row_ - _win_top_row_, calScrCol(*this) - _win_left_col_);
+        // api::Move(_row_ - _win_top_row_, calScrCol(*this) - _win_left_col_);
+        api::Move(_row_, calScrCol(*this));
     }
 
     api::Refresh();

@@ -122,7 +122,9 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
             // }
             // Skip until we find the closing */
             while (*current_pos && !(*current_pos == '*' && *(current_pos + 1) == '/')) {
-                *current_pos == '\n' ? x = 0, ++y : ++x;
+                *current_pos == '\t' ? (void)tab_pos.emplace_back(x) : nop;
+
+                *current_pos == '\n' ? tab_pos.clear(), x = 0, ++y : ++x;
 
                 current_pos += 1;
 
