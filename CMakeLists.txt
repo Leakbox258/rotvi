@@ -8,15 +8,18 @@ option(ENABLE_ASAN "Enable AddressSanitizer" ON)
 
 find_package(Curses REQUIRED)
 
-# use gdb only
+# Use gdb only
 add_compile_options("-g")
 add_link_options("-rdynamic")
 
 if (ENABLE_ASAN)
-        message(STATUS "AddressSanitizer enabled")
-        add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-        add_link_options(-fsanitize=address)
+    message(STATUS "AddressSanitizer enabled")
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
 endif()
+
+# Enable extended source for ncurses to support extended functions
+add_definitions(-D_XOPEN_SOURCE_EXTENDED)
 
 aux_source_directory(lib LIB)
 
@@ -29,4 +32,5 @@ target_include_directories(rotvi
     PRIVATE ${CURSES_INCLUDE_DIR}
 )
 
-target_link_libraries(rotvi PRIVATE ${CURSES_LIBRARIES})
+# Link against ncursesw for wide character and extended color support
+target_link_libraries(rotvi PRIVATE ncursesw)

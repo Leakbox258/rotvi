@@ -10,23 +10,22 @@
 
 namespace CXX_syntax {
 
-static const std::vector<const char *> keywords = {
-    "alignas", // NOLINT
-    "alignof",       "and",         "and_eq",     "asm",      "auto",      "bool",
-    "break",         "case",        "catch",      "char",     "char8_t",   "char16_t",
-    "char32_t",      "class",       "compl",      "concept",  "const",     "consteval",
-    "constexpr",     "constinit",   "const_cast", "continue", "co_await",  "co_return",
-    "co_yield",      "decltype",    "default",    "delete",   "do",        "double",
-    "dynamic_cast",  "else",        "enum",       "explicit", "export",    "extern",
-    "false",         "float",       "for",        "friend",   "goto",      "if",
-    "inline",        "int",         "long",       "mutable",  "namespace", "new",
-    "noexcept",      "not",         "not_eq",     "nullptr",  "operator",  "or",
-    "or_eq",         "private",     "protected",  "public",   "register",  "reinterpret_cast",
-    "requires",      "return",      "short",      "signed",   "sizeof",    "static",
-    "static_assert", "static_cast", "struct",     "switch",   "template",  "this",
-    "thread_local",  "throw",       "true",       "try",      "typedef",   "typeid",
-    "typename",      "union",       "unsigned",   "using",    "virtual",   "void",
-    "volatile",      "wchar_t",     "while",      "xor",      "xor_eq"};
+static const std::vector<const char *> keywords = { // NOLINT
+    "alignas",       "alignof",          "and",       "and_eq",    "asm",          "auto",         "bool",
+    "char",          "char8_t",          "char16_t",  "char32_t",  "class",        "compl",        "concept",
+    "const",         "consteval",        "constexpr", "constinit", "const_cast",   "co_await",     "co_return",
+    "co_yield",      "decltype",         "delete",    "double",    "dynamic_cast", "enum",         "explicit",
+    "export",        "extern",           "false",     "float",     "friend",       "inline",       "int",
+    "long",          "mutable",          "namespace", "new",       "noexcept",     "not",          "not_eq",
+    "nullptr",       "operator",         "or",        "or_eq",     "private",      "protected",    "public",
+    "register",      "reinterpret_cast", "requires",  "short",     "signed",       "sizeof",       "static",
+    "static_assert", "static_cast",      "struct",    "template",  "this",         "thread_local", "true",
+    "typedef",       "typeid",           "typename",  "union",     "unsigned",     "using",        "virtual",
+    "void",          "volatile",         "wchar_t",   "xor",       "xor_eq"};
+
+static const std::vector<const char *> keywords_flowcontrol = { // NOLINT
+    "break", "case", "catch",  "continue", "default", "do",  "else", "for",
+    "goto",  "if",   "return", "switch",   "throw",   "try", "while"};
 
 static const std::regex numeric_rx(
     R"(^(0[xX][0-9a-fA-F]+[uUlL]{0,3}|0[0-7]*[uUlL]{0,3}|[1-9][0-9]*[uUlL]{0,3}|([0-9]*\.[0-9]+|[0-9]+\.[0-9]*)([eE][+-]?[0-9]+)?[fFlL]?|[0-9]+[eE][+-]?[0-9]+[fFlL]?)$)");

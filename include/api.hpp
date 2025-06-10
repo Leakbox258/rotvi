@@ -100,6 +100,10 @@ inline bool Has_colors() {
     return has_colors(); // NOLINT
 }
 
+inline bool Can_change_color() {
+    return can_change_color(); // NOLINT
+}
+
 inline void Start_color() {
     start_color(); // NOLINT
 }
