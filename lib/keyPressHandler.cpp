@@ -72,7 +72,6 @@ template <> void cursor::pressHandler<Mode::NORMAL>(int ch) {
                     }
                 }
             } else {
-                // Unrecognized 'd' command, beep or ungetch(ch)
                 api::Beep();
             }
             break;
@@ -87,7 +86,7 @@ template <> void cursor::pressHandler<Mode::NORMAL>(int ch) {
             _row_ = static_cast<int>(lineNr()) - 1;
             clamp(); // ensure col is valid
             break;
-            // No 'gg' yet, can be added with timeout or sequence detection
+            // No 'gg' yet
         }
     }
 }
