@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 project(rotvi)
 
-option(ENABLE_ASAN "Enable AddressSanitizer" ON)
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 find_package(Curses REQUIRED)
 
