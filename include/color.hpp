@@ -24,7 +24,7 @@ enum color : u_int8_t {
     cyan = COLOR_CYAN,
     magenta = COLOR_MAGENTA,
     white = COLOR_WHITE,
-    DarkPlus_HotPink,
+    DarkPlus_HotPink = 16,
     DarkPlus_LemonChiffon,
     DarkPlus_PaleGreen,
     DarkPlus_LightGray, // ide is different from text editor
@@ -34,7 +34,6 @@ enum color : u_int8_t {
     Darkplus_Orchid,
     DarkPlus_LightYellow,
     DarkPlus_DeepBlue,
-    counter,
 };
 
 inline const std::map<color, std::array<u_int8_t, 3>> RGBList = // NOLINT
