@@ -24,7 +24,7 @@ inline int term_rows, term_cols;
 
 inline config cursorDefaultCfg = {
     .mode = Mode::NORMAL,
-    .autoChangLine = false,
+    .autoChangLine = true,
     .indent = 8,
 };
 
@@ -106,7 +106,7 @@ public:
     template <typename T> void lineAppend(T &&_content) { _lines_buf_.emplace_back(_content); }
 
     int mvRight() {
-        if (_col_ == lineColNr(_row_)) {
+        if (_config_.mode == Mode::NORMAL && _col_ == lineColNr(_row_)) {
             if (_config_.autoChangLine && _row_ < lineNr()) {
                 ++_row_;
                 return _col_ = 0;
@@ -174,7 +174,7 @@ public:
         return _col_ = std::min(static_cast<int>(_cmd_buf_.length()), _col_ + 1); // NOLINT
     }
 
-    void setToEOF();
+    void clamp();
 
     void redrawScreen();
 

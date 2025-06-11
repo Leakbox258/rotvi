@@ -85,7 +85,7 @@ template <> void cursor::pressHandler<Mode::NORMAL>(int ch) {
             // Add G to go to last line, gg to go to first line
         case 'G':
             _row_ = static_cast<int>(lineNr()) - 1;
-            setToEOF(); // ensure col is valid
+            clamp(); // ensure col is valid
             break;
             // No 'gg' yet, can be added with timeout or sequence detection
         }

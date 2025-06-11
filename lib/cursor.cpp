@@ -18,7 +18,7 @@ void cursor::fileWriteBack(const string &filename) {
     }
 }
 
-void cursor::setToEOF() {
+void cursor::clamp() {
     if (lineEmpty()) {
         lineAppend("");
     }
@@ -93,8 +93,6 @@ void cursor::redrawScreen() {
         api::Mvprintw(term_rows - 1, 0, ":%s", _cmd_buf_.c_str());
     }
 
-    // api::HighLightAttrOff();
-
     // Display status message if any, then clear it
     if (!_status_msg_.empty() && _config_.mode != Mode::COMMAND_LINE) {
         api::Mvprintw(term_rows - 1, (term_cols - static_cast<int>(_status_msg_.length())) / 2, "%s",
@@ -107,7 +105,6 @@ void cursor::redrawScreen() {
         api::Move(term_rows - 1, _col_ + 1);
     } else {
         api::Move(_row_ - _win_top_row_, calScrCol(*this) - _win_left_col_);
-        // api::Move(_row_, calScrCol(*this));
     }
 
     api::Refresh();
@@ -115,7 +112,6 @@ void cursor::redrawScreen() {
 
 ///@brief calculate where to display the cursor with tabs exsist
 int calScrCol(const cursor &cursor_v) {
-    // const std::string &line, int cursor_v._col_, int cursor_v._config_.indent
     const std::string &line = cursor_v.lineCur();
 
     int current_screen_col = 0;

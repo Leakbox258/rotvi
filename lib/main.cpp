@@ -12,11 +12,11 @@ int main(int argc, char *argv[]) {
         mainCursor = std::move(fileWriteIn());
     }
 
-    mainCursor->setToEOF(); // Initial clamp
+    mainCursor->clamp(); // Initial clamp
 
     int ch;
     while (true) {
-        mainCursor->setToEOF();
+        mainCursor->clamp();
         mainCursor->redrawScreen();
         ch = api::Getch();
 

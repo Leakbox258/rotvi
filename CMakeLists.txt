@@ -8,6 +8,7 @@ find_package(Curses REQUIRED)
 
 # Use gdb only
 add_compile_options("-g")
+add_compile_options("-O2")
 add_link_options("-rdynamic")
 
 # Enable extended source for ncurses to support extended functions
