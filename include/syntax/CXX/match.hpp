@@ -7,8 +7,8 @@
 
 namespace syntax {
 template <>
-inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatchImpl<syntax::CXX>(const char *token_Cstr,
-                                                                                             int len) {
+inline std::pair<const api::ColorAttr &, const api::ColorAttr &>
+colorMatchImpl<syntax::CXX>(const char *token_Cstr, int len, token::attr attr) {
 
     if (token_Cstr[0] == '#') {
         static const auto colorOn = api::ColorAttrOn<api::color::Darkplus_Orchid, api::color::default_color>();
@@ -18,8 +18,8 @@ inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatchImpl<
 
     for (const char *kw : CXX_syntax::keywords) {
         if (strncmp(token_Cstr, kw, strlen(kw)) == 0) {
-            static const auto colorOn = api::ColorAttrOn<api::color::blue, api::color::default_color>();
-            static const auto colorOff = api::ColorAttrOff<api::color::blue, api::color::default_color>();
+            static const auto colorOn = api::ColorAttrOn<api::color::DarkPlus_DeepBlue, api::color::default_color>();
+            static const auto colorOff = api::ColorAttrOff<api::color::DarkPlus_DeepBlue, api::color::default_color>();
             return {colorOn, colorOff};
         }
     }
@@ -32,13 +32,13 @@ inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatchImpl<
         }
     }
 
-    if (std::regex_match(token_Cstr, token_Cstr + len, CXX_syntax::string_lit_rx)) {
+    if (std::regex_match(token_Cstr, token_Cstr + len, CXX_syntax::string_lit_rx) || attr == token::attr::String) {
         static const auto colorOn = api::ColorAttrOn<api::color::DarkPlus_LemonChiffon, api::color::default_color>();
         static const auto colorOff = api::ColorAttrOff<api::color::DarkPlus_LemonChiffon, api::color::default_color>();
         return {colorOn, colorOff};
     }
 
-    if (std::regex_match(token_Cstr, token_Cstr + len, CXX_syntax::char_lit_rx)) {
+    if (std::regex_match(token_Cstr, token_Cstr + len, CXX_syntax::char_lit_rx) || attr == token::attr::String) {
         static const auto colorOn = api::ColorAttrOn<api::color::DarkPlus_LemonChiffon, api::color::default_color>();
         static const auto colorOff = api::ColorAttrOff<api::color::DarkPlus_LemonChiffon, api::color::default_color>();
         return {colorOn, colorOff};
@@ -50,16 +50,22 @@ inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatchImpl<
         return {colorOn, colorOff};
     }
 
-    if (std::regex_match(token_Cstr, token_Cstr + len, CXX_syntax::comments_rx)) {
+    ///@note in one line comment cant be recognized by regex
+    if (std::regex_match(token_Cstr, token_Cstr + len, CXX_syntax::comments_rx) || attr == token::attr::Comment) {
         static const auto colorOn = api::ColorAttrOn<api::color::DarkPlus_SlateBlue, api::color::default_color>();
         static const auto colorOff = api::ColorAttrOff<api::color::DarkPlus_SlateBlue, api::color::default_color>();
         return {colorOn, colorOff};
     }
 
-    ///@todo 函数名怎么不算是一种标识符
+    if (attr == token::attr::Function) {
+        static const auto colorOn = api::ColorAttrOn<api::color::DarkPlus_LightYellow, api::color::default_color>();
+        static const auto colorOff = api::ColorAttrOff<api::color::DarkPlus_LightYellow, api::color::default_color>();
+        return {colorOn, colorOff};
+    }
+
     if (std::regex_match(token_Cstr, token_Cstr + len, CXX_syntax::identifier_rx)) {
-        static const auto colorOn = api::ColorAttrOn<api::color::yellow, api::color::default_color>();
-        static const auto colorOff = api::ColorAttrOff<api::color::yellow, api::color::default_color>();
+        static const auto colorOn = api::ColorAttrOn<api::color::DarkPlus_LightGray, api::color::default_color>();
+        static const auto colorOff = api::ColorAttrOff<api::color::DarkPlus_LightGray, api::color::default_color>();
         return {colorOn, colorOff};
     }
 

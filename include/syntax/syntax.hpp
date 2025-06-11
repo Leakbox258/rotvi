@@ -33,7 +33,12 @@ struct token {
     int y;
     int x;
     int len;
-    enum attr : u_int32_t { None, Function } tokenAttr;
+    enum attr : u_int32_t {
+        None,
+        Function,
+        String,
+        Comment,
+    } tokenAttr;
 
     token(const char *const _cstr, int _y, int _x, int _len, attr _attr = None)
         : cstr(_cstr), y(_y), x(_x), len(_len), tokenAttr(_attr) {}
@@ -58,6 +63,13 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
     std::vector<int> tab_pos{};
     int y_last = 0, x_last = 0;
     int y = 0, x = 0;
+
+    auto last_token_attr = [&token_list]() -> std::optional<token::attr *> {
+        if (token_list.empty()) {
+            return std::nullopt;
+        }
+        return std::optional<token::attr *>(&token_list.back().tokenAttr);
+    };
 
     auto getDisplayX = [&tab_pos](int _x) {
         int currentColumn = 0;
@@ -88,11 +100,8 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
 
             int comment_len = 0;
 
-            // if (last_pos == nullptr) {
             last_pos = current_pos;
-            // }
 
-            // Skip to the end of the line
             while (*current_pos && *current_pos != '\n') {
                 current_pos += 1;
                 ++x;
@@ -100,7 +109,7 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
             }
 
             ++comment_len;
-            token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), comment_len);
+            token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), comment_len, token::attr::Comment);
 
             x = 0, ++y, tab_pos.clear();
             y_last = y, x_last = x;
@@ -117,9 +126,8 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
 
             int comment_len = 0;
 
-            // if (last_pos == nullptr) {
             last_pos = current_pos;
-            // }
+
             // Skip until we find the closing */
             while (*current_pos && !(*current_pos == '*' && *(current_pos + 1) == '/')) {
                 *current_pos == '\t' ? (void)tab_pos.emplace_back(x) : nop;
@@ -135,14 +143,14 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
                 current_pos += 2; // Skip past */
                 x += 2;
                 comment_len += 2;
-                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), comment_len);
+                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), comment_len, token::attr::Comment);
 
                 last_pos = current_pos; // Reset for next comment
                 y_last = y, x_last = x;
                 continue;
             } else {
                 // search */ but EOF
-                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), comment_len);
+                token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), comment_len, token::attr::Comment);
                 continue;
             }
         }
@@ -158,7 +166,6 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
             if (*(current_pos - 1) == '\\') {
 
                 current_pos += 1;
-                // ++x;
                 continue;
             }
 
@@ -182,7 +189,7 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
                 string_len += 1;
             }
 
-            token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), string_len);
+            token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), string_len, token::attr::String);
 
             last_pos = current_pos;
             y_last = y, x_last = x;
@@ -210,10 +217,14 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
             y_last = y, x_last = x;
             // } else if (inSet(*current_pos, '(', ')', '[', ']', '{', '}', '+', '-', '*', '!', '@', '#', '$', '%', '^', '&',
             //                  '=', '`', '~', '\\', ':', ';', '\'', '\"', ',', '<', '.', '>', '/', '?')) {
-        } else if (inSet(*current_pos, '(', ')', '[', ']', '{', '}', '+', '*', '!', '@', '#', '$', '%', '^', '&', '=',
-                         '`', '~', '\\', ':', ';', ',', '<', '.', '>', '/', '?')) {
+        } else if (inSet(*current_pos, '(', ')', '[', ']', '{', '}', '+', '*', '!', '@', '$', '%', '^', '&', '=', '`',
+                         '~', '\\', ':', ';', ',', '<', '.', '>', '/', '?')) {
             if (int len = static_cast<int>(current_pos - last_pos)) {
                 token_list.emplace_back(last_pos, y_last, getDisplayX(x_last), len);
+            }
+
+            if (auto ptr = last_token_attr(); *current_pos == '(' && ptr) {
+                **ptr = token::Function;
             }
 
             token_list.emplace_back(current_pos, y, getDisplayX(x), 1);
@@ -232,10 +243,11 @@ template <typename T> inline std::vector<token> tokenlize(T &&raw_text) {
 }
 
 template <fileType type>
-inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatchImpl(const char *token_Cstr, int length);
+inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatchImpl(const char *token_Cstr, int length,
+                                                                                token::attr attr);
 
 template <fileType type, typename T>
-inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatch(T &&token, int length) {
+inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatch(T &&token, int length, token::attr attr) {
     const char *token_Cstr;
 
     if constexpr (std::is_same_v<string, std::remove_cvref_t<T>>) {
@@ -247,7 +259,7 @@ inline std::pair<const api::ColorAttr &, const api::ColorAttr &> colorMatch(T &&
         static_assert(false);
     }
 
-    return colorMatchImpl<type>(token_Cstr, length);
+    return colorMatchImpl<type>(token_Cstr, length, attr);
 }
 
 struct ColorFmtBase {

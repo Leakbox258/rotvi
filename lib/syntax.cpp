@@ -47,7 +47,7 @@ template <> void ColorFmt<syntax::CXX>::operator()(const cursor &printCursor) co
 
     for (auto &[token, y, x, len, attr] : tokens) { // use const auto & will be tricky
 
-        auto color_pair = colorMatch<CXX>(token, len);
+        auto color_pair = colorMatch<CXX>(token, len, attr);
 
         color_pair.first(); // color attr on
 

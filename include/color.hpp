@@ -32,14 +32,17 @@ enum color : u_int8_t {
     DarkPlus_Aquamarine,
     DarkPlus_SlateBlue,
     Darkplus_Orchid,
+    DarkPlus_LightYellow,
+    DarkPlus_DeepBlue,
     counter,
 };
 
 inline const std::map<color, std::array<u_int8_t, 3>> RGBList = // NOLINT
-    {{DarkPlus_HotPink, {0XC5, 0X86, 0XC0}},   {DarkPlus_LemonChiffon, {0XCE, 0X91, 0X78}},
-     {DarkPlus_PaleGreen, {0XB5, 0XCE, 0XA8}}, {DarkPlus_LightGray, {0X9C, 0XDC, 0XFE}},
-     {DarkPlus_Cyan, {0X4E, 0XC9, 0XB0}},      {DarkPlus_Aquamarine, {78, 201, 176}},
-     {DarkPlus_SlateBlue, {0X6A, 0X99, 0X55}}, {Darkplus_Orchid, {0XC5, 0X86, 0XC0}}};
+    {{DarkPlus_HotPink, {0XC5, 0X86, 0XC0}},     {DarkPlus_LemonChiffon, {0XCE, 0X91, 0X78}},
+     {DarkPlus_PaleGreen, {0XB5, 0XCE, 0XA8}},   {DarkPlus_LightGray, {0X9C, 0XDC, 0XFE}},
+     {DarkPlus_Cyan, {0X4E, 0XC9, 0XB0}},        {DarkPlus_Aquamarine, {78, 201, 176}},
+     {DarkPlus_SlateBlue, {0X6A, 0X99, 0X55}},   {Darkplus_Orchid, {0XC5, 0X86, 0XC0}},
+     {DarkPlus_LightYellow, {0XDC, 0XDC, 0XAA}}, {DarkPlus_DeepBlue, {0X56, 0X9C, 0XD6}}};
 
 inline constexpr u_int16_t bitPack(color Front, color Back) {
     u_int16_t pack = 0x0;
