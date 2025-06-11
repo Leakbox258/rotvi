@@ -74,4 +74,9 @@ template <typename... Args> bool all_equal_pairs(Args &&...args) {
     return all_equal_pairs_impl(tuple, std::make_index_sequence<N / 2>{});
 }
 
+#define VERSION "1.0.0"
+#define MODIFIED "2025 Jun 11"
+#define COMPILE_TIME __DATE__ " " __TIME__
+#define SOFTWARE_INFO "rotvi " VERSION " (" MODIFIED ", compiled at " COMPILE_TIME ")\n"
+
 #endif
