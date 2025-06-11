@@ -19,13 +19,14 @@ void ColorFmt<syntax::UNKNOWN>::operator()(const cursor &printCursor) const {
 }
 
 template <> void ColorFmt<syntax::CXX>::operator()(const cursor &printCursor) const {
-    const auto &text_list = printCursor.lines();
+    auto &lines = printCursor.lines();
+    std::vector<std::reference_wrapper<const string>> text_list(lines.begin() + printCursor.top_row(), lines.end());
 
     static_assert(is_sequential_counter<std::remove_cvref_t<decltype(text_list)>>::value);
 
     std::size_t reserve_size = 0;
     for (const auto &line : text_list) {
-        reserve_size += line.c_str() ? strlen(line.c_str()) : 0;
+        reserve_size += line.get().c_str() ? strlen(line.get().c_str()) : 0;
     }
 
     reserve_size += text_list.size(); // for spaces
@@ -34,13 +35,13 @@ template <> void ColorFmt<syntax::CXX>::operator()(const cursor &printCursor) co
     auto raw_text = std::make_unique<char[]>(reserve_size);
     char *raw_text_ptr = raw_text.get();
     for (const auto &line : text_list) {
-        if (line.c_str() == nullptr) {
+        if (line.get().c_str() == nullptr) {
             continue;
         }
 
-        strncpy(raw_text_ptr, line.c_str(), line.length());
+        strncpy(raw_text_ptr, line.get().c_str(), line.get().length());
         strncat(raw_text_ptr, "\n", 1);
-        raw_text_ptr += strlen(line.c_str()) + 1;
+        raw_text_ptr += strlen(line.get().c_str()) + 1;
     }
 
     auto tokens = tokenlize(raw_text.get());

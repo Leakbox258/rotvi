@@ -4,19 +4,11 @@ set(CMAKE_CXX_STANDARD 23)
 
 project(rotvi)
 
-option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
-
 find_package(Curses REQUIRED)
 
 # Use gdb only
 add_compile_options("-g")
 add_link_options("-rdynamic")
-
-if (ENABLE_ASAN)
-    message(STATUS "AddressSanitizer enabled")
-    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address)
-endif()
 
 # Enable extended source for ncurses to support extended functions
 add_definitions(-D_XOPEN_SOURCE_EXTENDED)

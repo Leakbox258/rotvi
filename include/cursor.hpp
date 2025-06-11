@@ -66,6 +66,8 @@ public:
 
     [[nodiscard]] const auto &lines() const { return _lines_buf_; }
 
+    [[nodiscard]] auto &lines() { return _lines_buf_; }
+
     [[nodiscard]] const auto &status() const { return _status_msg_; }
 
     void renewStatus(string &&_new_status) { _status_msg_ = _new_status; }
@@ -93,6 +95,8 @@ public:
     unsigned lineNr() { return _lines_buf_.size(); }
 
     bool lineEmpty() { return _lines_buf_.empty(); }
+
+    int top_row() const { return _win_top_row_; }
 
     int lineColNr(int _row) { return static_cast<int>(_lines_buf_.at(_row).size()); }
 
