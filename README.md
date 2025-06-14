@@ -1,6 +1,10 @@
 # rotvi editor ( or !^ editor )
 A vi like terminal-based text editor on Linux
 
+It will work like:
+
+![image](./image.png "effect")
+
 warning: inorder to compile, your `ncurses6-config --version` have to newer than 6.0
          and you `cmake --version` have to be more recent than 3.10
 
